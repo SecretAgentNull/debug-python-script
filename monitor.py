@@ -1,6 +1,12 @@
 import os
 import time
 import requests
+from datetime import datetime
+
+def log(message: str):
+    """Log message with timestamp."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{timestamp} {message}", flush=True)
 
 def send_discord_message(webhook_url: str, message: str):
     """Send an error message to Discord webhook."""
@@ -8,7 +14,7 @@ def send_discord_message(webhook_url: str, message: str):
         response = requests.post(webhook_url, json={"content": message})
         response.raise_for_status()
     except Exception as e:
-        print(f"Failed to send message to Discord: {e}")
+        log(f"Failed to send message to Discord: {e}")
 
 def main():
     url = os.getenv("URL")
@@ -20,14 +26,14 @@ def main():
     while True:
         try:
             response = requests.get(url, timeout=10)
+            log(f"{url} {response.status_code}")
             if not response.ok:  # Non-200 responses
                 msg = f"Error: {url} returned status {response.status_code}"
-                print(msg)
                 send_discord_message(webhook_url, msg)
         except Exception as e:
-            msg = f"Exception while fetching {url}: {e}"
-            print(msg)
-            send_discord_message(webhook_url, msg)
+            msg = f"Exception: {e}"
+            log(f"{url} {msg}")
+            send_discord_message(webhook_url, f"Exception while fetching {url}: {e}")
 
         time.sleep(60)  # wait one minute
 
